@@ -33,12 +33,15 @@ export class ViewStudentComponent implements OnInit {
     }
   }
 
+  isNewStudent = false;
+  header = '';
+
   genders: Gender[] = [];
 
   constructor(private readonly studentService: StudentService,
     private readonly route: ActivatedRoute,
     private readonly genderService: GenderService,
-    private snackBar: MatSnackBar,
+    private snackbar: MatSnackBar,
     private router: Router ) {}
 
 
@@ -47,13 +50,24 @@ export class ViewStudentComponent implements OnInit {
       (params) => {
         this.studentId = params.get('id');
 
-        if(this.studentId){
-          this.studentService.getStudentById(this.studentId)
-          .subscribe(
-            (successResponse) => {
-              this.student = successResponse;
-            }
-          );
+        if(this.studentId) {
+          if(this.studentId.toLowerCase() == 'Add'.toLowerCase()) {
+
+            this.isNewStudent = true;
+            this.header = 'Add New Student';
+
+          } else {
+
+            this.isNewStudent = false;
+            this.header = 'Edit Student';
+
+            this.studentService.getStudentById(this.studentId)
+            .subscribe(
+              (successResponse) => {
+                this.student = successResponse;
+              }
+            );
+          }
 
           this.genderService.getGenders()
           .subscribe(
@@ -70,8 +84,8 @@ export class ViewStudentComponent implements OnInit {
   onUpdate(): void {
    this.studentService.updateStudent(this.student.id, this.student)
     .subscribe(
-      (sucessResponse) => {
-        this.snackBar.open('Student updated successfully', undefined, {
+      (successResponse) => {
+        this.snackbar.open('Student updated successfully', undefined, {
           duration: 2000
         })
       },
@@ -84,8 +98,8 @@ export class ViewStudentComponent implements OnInit {
   onDelete(): void {
     this.studentService.deleteStudent(this.student.id)
     .subscribe(
-      (sucessResponse) => {
-        this.snackBar.open('Student deleted successfully', undefined, {
+      (successResponse) => {
+        this.snackbar.open('Student deleted successfully', undefined, {
           duration: 2000
         });
 
@@ -99,4 +113,22 @@ export class ViewStudentComponent implements OnInit {
       }
     );
   }
+
+  onAdd(): void {
+    this.studentService.addStudent(this.student)
+    .subscribe(
+      (successResponse) => {
+        this.snackbar.open('Student added successfully', undefined, {
+          duration: 2000
+        });
+
+        setTimeout(() => {
+          this.router.navigateByUrl(`students/${successResponse.id}`);
+        }, 2000);
+      },
+      (errorResponse) => {
+        console.log(errorResponse);
+      }
+    );
+   }
 }
