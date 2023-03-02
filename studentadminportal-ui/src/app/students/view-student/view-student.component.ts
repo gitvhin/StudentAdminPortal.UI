@@ -35,6 +35,7 @@ export class ViewStudentComponent implements OnInit {
 
   isNewStudent = false;
   header = '';
+  displayProfileImageUrl= '';
 
   genders: Gender[] = [];
 
@@ -55,18 +56,22 @@ export class ViewStudentComponent implements OnInit {
 
             this.isNewStudent = true;
             this.header = 'Add New Student';
+            this.setImage();
 
           } else {
-
-            this.isNewStudent = false;
-            this.header = 'Edit Student';
-
-            this.studentService.getStudentById(this.studentId)
-            .subscribe(
-              (successResponse) => {
-                this.student = successResponse;
-              }
-            );
+             this.isNewStudent = false;
+             this.header = 'Edit Student';
+             this.studentService.getStudentById(this.studentId)
+               .subscribe(
+                 (successResponse) => {
+                   this.student = successResponse;
+                   this.setImage();
+                 },
+                 (errorResponse) => {
+                   this.setImage();
+                   console.log(errorResponse);
+                 }
+               );
           }
 
           this.genderService.getGenders()
@@ -131,4 +136,35 @@ export class ViewStudentComponent implements OnInit {
       }
     );
    }
+
+  uploadImage(event: any): void {
+    if(this.studentId){
+      const file: File = event.target.files[0];
+      this.studentService.uploadImage(this.studentId, file)
+      .subscribe(
+        (successResponse) => {
+            this.student.profileImageUrl =  successResponse;
+            this.setImage();
+
+            this.snackbar.open('Profile Image Updated', undefined, {
+              duration: 2000
+            })
+
+        },
+        (errorResponse) => {
+
+        }
+      )
+    }
+  }
+
+  private setImage(): void {
+   if(this.student.profileImageUrl)
+   {
+     this.displayProfileImageUrl = this.studentService.getImagePath(this.student.profileImageUrl);
+   }
+   else {
+     this.displayProfileImageUrl = '/assets/user.png';
+   }
+  }
 }
